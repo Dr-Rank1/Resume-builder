@@ -1,0 +1,513 @@
+/* ============================================
+   PDF EXPORT STYLES
+   Professional print-ready styles for resumes
+   ============================================ */
+
+/* ============================================
+   BASE PRINT STYLES
+   Applied to all templates for print consistency
+   ============================================ */
+
+@media print {
+  /* Reset background and colors for print */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* Page setup */
+  @page {
+    size: A4;
+    margin: 0.75in;
+  }
+
+  /* Hide UI elements when printing */
+  .no-print,
+  button,
+  .print-hidden,
+  [data-print="false"] {
+    display: none !important;
+  }
+
+  /* Ensure proper page breaks */
+  .page-break {
+    page-break-before: always;
+  }
+
+  .avoid-break {
+    page-break-inside: avoid;
+  }
+
+  /* Fix layout issues */
+  body {
+    margin: 0;
+    padding: 0;
+    background: white;
+    font-size: 10pt;
+    line-height: 1.4;
+    color: #1a1a1a;
+  }
+
+  /* ============================================
+     TYPOGRAPHY FOR PRINT
+     ============================================ */
+
+  h1 {
+    font-size: 22pt;
+    font-weight: 700;
+    line-height: 1.2;
+    margin: 0 0 8pt 0;
+  }
+
+  h2 {
+    font-size: 12pt;
+    font-weight: 600;
+    line-height: 1.3;
+    margin: 12pt 0 6pt 0;
+    border-bottom: 1px solid #e5e5e5;
+    padding-bottom: 4pt;
+  }
+
+  h3 {
+    font-size: 11pt;
+    font-weight: 600;
+    margin: 8pt 0 4pt 0;
+  }
+
+  p {
+    font-size: 10pt;
+    margin: 0 0 6pt 0;
+  }
+
+  /* ============================================
+     SECTIONS
+     ============================================ */
+
+  section {
+    margin-bottom: 12pt;
+  }
+
+  .section-header {
+    font-size: 11pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5pt;
+    color: #404040;
+    border-bottom: 1px solid #d0d0d0;
+    padding-bottom: 4pt;
+    margin-bottom: 8pt;
+  }
+
+  /* ============================================
+     ENTRIES (Experience, Education, Projects)
+     ============================================ */
+
+  .entry {
+    margin-bottom: 10pt;
+  }
+
+  .entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 2pt;
+  }
+
+  .entry-title {
+    font-weight: 600;
+    font-size: 10.5pt;
+  }
+
+  .entry-date {
+    font-size: 9pt;
+    color: #666;
+    font-weight: normal;
+  }
+
+  .entry-subtitle {
+    font-size: 10pt;
+    color: #444;
+    margin-bottom: 4pt;
+  }
+
+  .entry-description {
+    font-size: 9.5pt;
+    color: #555;
+    margin-bottom: 4pt;
+  }
+
+  /* ============================================
+     BULLET POINTS
+     ============================================ */
+
+  ul {
+    margin: 0;
+    padding: 0 0 0 16pt;
+    list-style-type: disc;
+  }
+
+  li {
+    font-size: 10pt;
+    margin-bottom: 3pt;
+    line-height: 1.3;
+  }
+
+  /* ============================================
+     SKILLS
+     ============================================ */
+
+  .skills-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4pt 8pt;
+  }
+
+  .skill-tag {
+    font-size: 9pt;
+    padding: 2pt 6pt;
+    background: #f0f0f0;
+    border-radius: 2pt;
+  }
+
+  /* ============================================
+     SIDEBAR LAYOUTS
+     ============================================ */
+
+  .sidebar-layout {
+    display: flex;
+    flex-direction: row;
+    gap: 16pt;
+  }
+
+  .sidebar {
+    width: 200pt;
+    flex-shrink: 0;
+    padding-right: 12pt;
+    border-right: 1px solid #e0e0e0;
+  }
+
+  .main-content {
+    flex: 1;
+  }
+
+  .sidebar h2 {
+    font-size: 10pt;
+  }
+
+  /* ============================================
+     TWO COLUMN LAYOUTS
+     ============================================ */
+
+  .two-column {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16pt;
+  }
+
+  /* ============================================
+     GRID LAYOUTS
+     ============================================ */
+
+  .bento-grid {
+    display: grid;
+    grid-template-columns: 2fr 3fr;
+    gap: 12pt;
+  }
+
+  /* ============================================
+     CARDS & CONTAINERS
+     ============================================ */
+
+  .card {
+    border: 1px solid #e0e0e0;
+    padding: 8pt;
+    margin-bottom: 8pt;
+    background: white;
+  }
+
+  .card-bordered {
+    border-left: 3px solid #2563eb;
+    padding-left: 8pt;
+    margin-left: 0;
+  }
+
+  /* ============================================
+     TIMELINE STYLE
+     ============================================ */
+
+  .timeline-entry {
+    position: relative;
+    padding-left: 16pt;
+    margin-bottom: 10pt;
+  }
+
+  .timeline-entry::before {
+    content: '';
+    position: absolute;
+    left: 4pt;
+    top: 6pt;
+    width: 6pt;
+    height: 6pt;
+    border-radius: 50%;
+    background: #2563eb;
+  }
+
+  .timeline-entry::after {
+    content: '';
+    position: absolute;
+    left: 7pt;
+    top: 14pt;
+    width: 1pt;
+    height: calc(100% + 6pt);
+    background: #e0e0e0;
+  }
+
+  .timeline-entry:last-child::after {
+    display: none;
+  }
+
+  /* ============================================
+     CONTACT INFO
+     ============================================ */
+
+  .contact-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4pt 12pt;
+    font-size: 9pt;
+    color: #555;
+  }
+
+  .contact-item {
+    display: flex;
+    align-items: center;
+    gap: 2pt;
+  }
+
+  /* ============================================
+     SUMMARY / PROFILE
+     ============================================ */
+
+  .summary {
+    font-size: 10pt;
+    line-height: 1.5;
+    color: #444;
+    margin-bottom: 12pt;
+  }
+
+  .summary-accent {
+    background: #f0f7ff;
+    padding: 8pt;
+    border-left: 3px solid #2563eb;
+    margin-bottom: 12pt;
+  }
+
+  /* ============================================
+     ACCENT ELEMENTS
+     ============================================ */
+
+  .accent-strip {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4pt;
+    background: linear-gradient(to bottom, #2563eb, #7c3aed);
+  }
+
+  .gradient-header {
+    background: linear-gradient(to right, #1e40af, #7c3aed);
+    color: white;
+    padding: 16pt;
+    margin: -24pt -24pt 16pt -24pt;
+  }
+
+  /* ============================================
+     GRID/BENTO SPECIFIC
+     ============================================ */
+
+  .bento-grid-item {
+    padding: 8pt;
+    background: #fafafa;
+  }
+
+  /* ============================================
+     DARK TEMPLATES
+     ============================================ */
+
+  .dark-template {
+    background: #1e1e1e;
+    color: #e0e0e0;
+  }
+
+  .dark-template h1,
+  .dark-template h2,
+  .dark-template h3 {
+    color: white;
+  }
+
+  .dark-template .section-header {
+    color: #a0a0a0;
+    border-color: #404040;
+  }
+
+  /* ============================================
+     AVOID OVERFLOW
+     ============================================ */
+
+  * {
+    overflow: visible !important;
+  }
+
+  .resume-container {
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  /* ============================================
+     FINAL POLISH
+     ============================================ */
+
+  /* Ensure images don't overflow */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Consistent spacing */
+  .resume-content {
+    padding: 0;
+    margin: 0;
+  }
+
+  /* Remove shadows */
+  * {
+    box-shadow: none !important;
+  }
+
+  /* Remove animations */
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ============================================
+   SCREEN STYLES (for preview)
+   Ensure screen preview matches print
+   ============================================ */
+
+@media screen {
+  /* Keep screen readable */
+  .resume-preview-container {
+    background: #f0f0f0;
+    padding: 20px;
+    min-height: 100vh;
+  }
+
+  .resume-paper {
+    background: white;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    margin: 0 auto;
+  }
+
+  /* Print button styling */
+  .print-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 24px;
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+    transition: background 0.2s;
+    z-index: 1000;
+  }
+
+  .print-button:hover {
+    background: #1d4ed8;
+  }
+}
+
+/* ============================================
+   SPECIFIC TEMPLATE PRINT OVERRIDES
+   ============================================ */
+
+/* Minimal Classic */
+[data-template="minimal-classic"] {
+  font-family: 'Georgia', 'Times New Roman', serif;
+}
+
+/* Modern Sidebar */
+[data-template="modern-sidebar"] .sidebar {
+  background: #f8fafc;
+}
+
+/* Professional Executive */
+[data-template="professional-executive"] .section-header {
+  text-align: center;
+  letter-spacing: 1pt;
+}
+
+/* Creative Bold */
+[data-template="creative-bold"] {
+  background: #000;
+  color: white;
+}
+
+[data-template="creative-bold"] h1 {
+  font-size: 36pt;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -1pt;
+}
+
+[data-template="creative-bold"] .gradient-bar {
+  height: 4pt;
+  background: linear-gradient(to right, #ec4899, #8b5cf6, #3b82f6);
+}
+
+/* Creative Dark */
+[data-template="creative-dark"] {
+  background: #0f172a;
+  color: white;
+}
+
+/* Professional Academic */
+[data-template="professional-academic"] {
+  font-size: 11pt;
+}
+
+[data-template="professional-academic"] h2 {
+  font-size: 12pt;
+}
+
+/* ============================================
+   EXPORT UTILITY CLASSES
+   ============================================ */
+
+.print-only {
+  display: none;
+}
+
+@media print {
+  .print-only {
+    display: block;
+  }
+}
+
+.screen-only {
+  display: block;
+}
+
+@media print {
+  .screen-only {
+    display: none;
+  }
+}

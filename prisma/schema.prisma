@@ -1,0 +1,489 @@
+// ============================================
+// PRISMA SCHEMA - ENTERPRISE MULTI-TENANT
+// ============================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ORGANIZATION (Multi-Tenant Root)
+// ============================================
+
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  domain      String?  @unique
+  logo        String?
+  settings    Json     @default("{}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  users            User[]
+  recruiters       RecruiterProfile[]
+  jobPostings      JobPosting[]
+  subscription     Subscription?
+  analytics        Analytics[]
+  subscriptionTier OrganizationTier @default(FREE)
+}
+
+enum OrganizationTier {
+  FREE
+  PRO
+  PREMIUM
+  ENTERPRISE
+}
+
+// ============================================
+// USER MODEL (Extended)
+// ============================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  
+  // Authentication
+  password      String?
+  accounts      Account[]
+  sessions      Session[]
+  authToken     String?   @unique
+
+  // Organization
+  organizationId String?
+  organization    Organization? @relation(fields: [organizationId], references: [id])
+  
+  // Role-based access
+  role          UserRole  @default(USER)
+  
+  // Profile
+  phone         String?
+  location      String?
+  linkedIn      String?
+  portfolio     String?
+  headline      String?
+  bio           String?
+  
+  // Resume data (backup, primary is localStorage)
+  resumesData   Json?
+  
+  // Preferences
+  preferences   Json      @default("{}")
+  
+  // Stripe
+  customerId    String?   @unique
+  subscriptionId String?  @unique
+  
+  // AI Usage
+  aiCreditsUsed Int       @default(0)
+  aiCreditsLimit Int      @default(0)
+  
+  // Timestamps
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastLoginAt   DateTime?
+
+  // Relations
+  resumes         Resume[]
+  aiUsageLogs     AIUsageLog[]
+  candidateProfiles CandidateProfile[]
+  candidateMatches  CandidateMatch[]
+
+  @@index([email])
+  @@index([organizationId])
+}
+
+enum UserRole {
+  USER
+  RECRUITER
+  ADMIN
+  SUPER_ADMIN
+}
+
+// ============================================
+// AUTH MODELS (NextAuth)
+// ============================================
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String? @db.Text
+  access_token       String? @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ============================================
+// SUBSCRIPTION & BILLING
+// ============================================
+
+model Subscription {
+  id                   String   @id @default(cuid())
+  
+  organizationId       String   @unique
+  organization         Organization @relation(fields: [organizationId], references: [id])
+  
+  stripeCustomerId     String   @unique
+  stripeSubscriptionId String?  @unique
+  
+  tier                 SubscriptionTier @default(FREE)
+  status               String   @default("active")
+  
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  cancelAtPeriodEnd    Boolean  @default(false)
+  
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  invoices             Invoice[]
+}
+
+enum SubscriptionTier {
+  FREE
+  PRO
+  PREMIUM
+  ENTERPRISE
+}
+
+model Invoice {
+  id                   String   @id @default(cuid())
+  subscriptionId       String
+  subscription         Subscription @relation(fields: [subscriptionId], references: [id])
+  
+  stripeInvoiceId      String   @unique
+  amount               Int      // in cents
+  currency             String   @default("usd")
+  status               String
+  
+  createdAt            DateTime @default(now())
+  paidAt               DateTime?
+}
+
+// ============================================
+// RECRUITER PROFILE
+// ============================================
+
+model RecruiterProfile {
+  id              String   @id @default(cuid())
+  
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id])
+  
+  companyName     String
+  companyLogo     String?
+  industry        String?
+  companySize     String?
+  
+  headcount       Int      @default(0)
+  hiringGoal      Int      @default(0)
+  openPositions   Int      @default(0)
+  
+  bio             String?  @db.Text
+  linkedIn        String?
+  
+  settings        Json     @default("{}")
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  jobPostings     JobPosting[]
+  candidateMatches CandidateMatch[]
+}
+
+// ============================================
+// JOB POSTINGS
+// ============================================
+
+model JobPosting {
+  id                String   @id @default(cuid())
+  
+  organizationId    String
+  organization      Organization @relation(fields: [organizationId], references: [id])
+  
+  recruiterId       String
+  recruiter         RecruiterProfile @relation(fields: [recruiterId], references: [id])
+  
+  title             String
+  slug              String
+  
+  department        String?
+  location          String?
+  locationType      JobLocationType @default(ONSITE)
+  remote           Boolean  @default(false)
+  
+  salaryMin         Int?
+  salaryMax         Int?
+  salaryCurrency    String   @default("USD")
+  
+  description       String   @db.Text
+  requirements      String   @db.Text
+  
+  parsedSkills      String[] @default([])
+  parsedKeywords    String[] @default([])
+  seniorityLevel    String?
+  
+  status            JobStatus @default(DRAFT)
+  featured          Boolean  @default(false)
+  
+  viewsCount        Int      @default(0)
+  applicationsCount Int      @default(0)
+  
+  expiresAt         DateTime?
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  publishedAt       DateTime?
+
+  candidateMatches  CandidateMatch[]
+  
+  @@unique([organizationId, slug])
+  @@index([status])
+  @@index([organizationId])
+}
+
+enum JobLocationType {
+  ONSITE
+  REMOTE
+  HYBRID
+}
+
+enum JobStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+  ARCHIVED
+}
+
+// ============================================
+// CANDIDATE PROFILE (Resume stored in DB)
+// ============================================
+
+model CandidateProfile {
+  id              String   @id @default(cuid())
+  
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id])
+  
+  headline        String?
+  summary         String?  @db.Text
+  
+  skills          String[] @default([])
+  keywords        String[] @default([])
+  
+  resumeText      String?  @db.Text // Full resume text for searching
+  resumeFileUrl   String?
+  
+  location        String?
+  openToWork      Boolean  @default(true)
+  salaryExpectation Int?
+  
+  parsedData      Json?    // Structured resume data
+  
+  lastActiveAt    DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  candidateMatches CandidateMatch[]
+
+  @@index([skills])
+  @@index([location])
+}
+
+// ============================================
+// CANDIDATE MATCHING
+// ============================================
+
+model CandidateMatch {
+  id                String   @id @default(cuid())
+  
+  jobPostingId      String
+  jobPosting        JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+  
+  candidateId       String
+  candidate         CandidateProfile @relation(fields: [candidateId], references: [id])
+  
+  recruiterId       String?
+  recruiter         RecruiterProfile? @relation(fields: [recruiterId], references: [id])
+  
+  matchScore        Int      // 0-100
+  matchedKeywords   String[] @default([])
+  missingKeywords   String[] @default([])
+  
+  atsScore          Int?     // Detailed ATS score
+  
+  status            MatchStatus @default(PENDING)
+  notes             String?  @db.Text
+  
+  viewedAt          DateTime?
+  appliedAt          DateTime?
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([jobPostingId, candidateId])
+  @@index([matchScore])
+  @@index([status])
+}
+
+// ============================================
+// AI USAGE TRACKING
+// ============================================
+
+model AIUsageLog {
+  id            String   @id @default(cuid())
+  
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  
+  feature       String   // bullet_generation, summary, ats_matching, interview_coach
+  action        String   // generate, analyze, etc.
+  
+  inputTokens   Int      @default(0)
+  outputTokens  Int      @default(0)
+  totalTokens   Int      @default(0)
+  
+  costCents     Int      @default(0)
+  
+  model         String   @default("gpt-4o-mini")
+  
+  metadata      Json?    // Additional context
+  
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// ============================================
+// ANALYTICS
+// ============================================
+
+model Analytics {
+  id              String   @id @default(cuid())
+  
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  
+  date            DateTime
+  metric          String   // views, resumes_created, ai_usage, revenue
+  value           Float
+  
+  metadata        Json?
+  
+  @@unique([organizationId, date, metric])
+  @@index([date])
+}
+
+// ============================================
+// RESUME (Enhanced)
+// ============================================
+
+model Resume {
+  id            String   @id @default(cuid())
+  
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  
+  title         String
+  slug          String
+  
+  template      String   @default("modern") // minimal, modern, creative
+  
+  // All resume data in JSON
+  personal      Json?
+  summary       String?  @db.Text
+  experience    Json     @default("[]")
+  education     Json     @default("[]")
+  skills        Json     @default("[]")
+  projects      Json     @default("[]")
+  
+  sectionOrder  String[] @default(["experience", "education", "skills", "projects"])
+  
+  // Scores
+  completenessScore Int?
+  qualityScore      Int?
+  atsScore          Int?
+  
+  // Stats
+  viewsCount        Int      @default(0)
+  downloadsCount    Int      @default(0)
+  
+  isPublic          Boolean  @default(false)
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([userId])
+  @@index([isPublic])
+}
+
+// ============================================
+// TEMPLATE MARKETPLACE
+// ============================================
+
+model Template {
+  id          String   @id @default(cuid())
+  
+  name        String   @unique
+  slug        String   @unique
+  
+  description String?
+  thumbnail   String?
+  
+  category    String   // tech, creative, executive, etc.
+  
+  isPremium   Boolean  @default(false)
+  price       Int?     // cents, null = free
+  
+  css         String   @db.Text
+  html        String?  @db.Text
+  
+  usageCount  Int      @default(0)
+  
+  isActive    Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([category])
+  @@index([isPremium])
+}
